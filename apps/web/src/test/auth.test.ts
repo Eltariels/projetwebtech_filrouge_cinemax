@@ -5,15 +5,19 @@
 import { describe, it, expect, beforeEach } from "vitest";
 
 // Simule localStorage
+// On utilise globalThis (standard ECMAScript) plutôt que global (Node.js only)
 const storage: Record<string, string> = {};
-global.localStorage = {
-    getItem:    (k: string) => storage[k] ?? null,
-    setItem:    (k: string, v: string) => { storage[k] = v; },
-    removeItem: (k: string) => { delete storage[k]; },
-    clear:      () => Object.keys(storage).forEach(k => delete storage[k]),
-    length: 0,
-    key: () => null,
-};
+Object.defineProperty(globalThis, "localStorage", {
+    value: {
+        getItem:    (k: string) => storage[k] ?? null,
+        setItem:    (k: string, v: string) => { storage[k] = v; },
+        removeItem: (k: string) => { delete storage[k]; },
+        clear:      () => Object.keys(storage).forEach(k => delete storage[k]),
+        length: 0,
+        key: () => null,
+    },
+    writable: true,
+});
 
 describe("Auth — gestion du token JWT", () => {
     beforeEach(() => localStorage.clear());
