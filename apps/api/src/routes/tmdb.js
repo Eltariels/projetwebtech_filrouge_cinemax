@@ -33,6 +33,17 @@ tmdbRouter.get("/movies/top-rated", async (req, res) => {
     }
 });
 
+// ⚠️ Doit être AVANT /movies/:id — sinon Express match "now-playing" comme un :id
+tmdbRouter.get("/movies/now-playing", async (req, res) => {
+    try {
+        const { page = 1, region = "FR" } = req.query;
+        const data = await tmdbFetch("/movie/now_playing", { page, region });
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 tmdbRouter.get("/movies/:id", async (req, res) => {
     try {
         const data = await tmdbFetch(`/movie/${req.params.id}`, {
@@ -76,17 +87,6 @@ tmdbRouter.get("/tv/:id", async (req, res) => {
         const data = await tmdbFetch(`/tv/${req.params.id}`, {
             append_to_response: "credits,videos,similar",
         });
-        res.json(data);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// GET /api/tmdb/movies/now-playing — films actuellement en salle
-tmdbRouter.get("/movies/now-playing", async (req, res) => {
-    try {
-        const { page = 1, region = "FR" } = req.query;
-        const data = await tmdbFetch("/movie/now_playing", { page, region });
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
