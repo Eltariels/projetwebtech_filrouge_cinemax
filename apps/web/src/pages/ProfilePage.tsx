@@ -6,6 +6,79 @@ import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import { api } from "../lib/api";
 import { useResponsive } from "../hooks/useResponsive";
+
+// ── Système de badges ────────────────────────────────────────────────────────
+const BADGES = [
+    { id: "first",       emoji: "🎬", label: "Premier pas",       desc: "1er film consulté",           check: (_w: any[], _r: any[], h: any[], _p: any) => h.length >= 1 },
+    { id: "cinephile10", emoji: "🌱", label: "Cinéphile en herbe", desc: "10 films consultés",          check: (_w: any[], _r: any[], h: any[], _p: any) => h.length >= 10 },
+    { id: "cinephile50", emoji: "🎭", label: "Amateur éclairé",    desc: "50 films consultés",          check: (_w: any[], _r: any[], h: any[], _p: any) => h.length >= 50 },
+    { id: "expert",      emoji: "🏆", label: "Expert",             desc: "100 films consultés",         check: (_w: any[], _r: any[], h: any[], _p: any) => h.length >= 100 },
+    { id: "critic",      emoji: "⭐", label: "Critique",           desc: "5 films notés",               check: (_w: any[], r: any[], _h: any[], _p: any) => r.length >= 5 },
+    { id: "collector",   emoji: "📚", label: "Collectionneur",     desc: "10 films en watchlist",       check: (w: any[], _r: any[], _h: any[], _p: any) => w.length >= 10 },
+    { id: "adn",         emoji: "🧬", label: "ADN Cinéma",         desc: "Profil de goûts configuré",   check: (_w: any[], _r: any[], _h: any[], p: any) => !!(p?.genres?.length) },
+    { id: "binge",       emoji: "🔥", label: "Binge Watcher",      desc: "20 films notés",              check: (_w: any[], r: any[], _h: any[], _p: any) => r.length >= 20 },
+];
+
+function BadgesSection({ watchlist, ratings, history, prefs }: { watchlist: any[], ratings: any[], history: any[], prefs: any }) {
+    const earned = BADGES.filter(b => b.check(watchlist, ratings, history, prefs));
+    const locked = BADGES.filter(b => !b.check(watchlist, ratings, history, prefs));
+    return (
+        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border)", borderRadius: 8, padding: "1.25rem", marginBottom: "2rem" }}>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.3rem", fontWeight: 400, color: "var(--gold)", marginBottom: "1rem" }}>
+                🏅 Badges
+            </h2>
+            {earned.length === 0 && (
+                <p style={{ color: "var(--text-muted)", fontSize: "0.875rem" }}>Commence à explorer pour débloquer des badges !</p>
+            )}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginBottom: locked.length ? "1rem" : 0 }}>
+                {earned.map(b => (
+                    <div key={b.id} title={b.desc} style={{ background: "rgba(201,168,76,0.1)", border: "1px solid var(--gold-dark)", borderRadius: 8, padding: "0.6rem 0.9rem", textAlign: "center", minWidth: 90 }}>
+                        <div style={{ fontSize: "1.5rem", marginBottom: "0.25rem" }}>{b.emoji}</div>
+                        <div style={{ fontSize: "0.7rem", color: "var(--gold)", fontWeight: 500 }}>{b.label}</div>
+                        <div style={{ fontSize: "0.62rem", color: "var(--text-muted)", marginTop: "0.1rem" }}>{b.desc}</div>
+                    </div>
+                ))}
+            </div>
+            {locked.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                    {locked.map(b => (
+                        <div key={b.id} title={`À débloquer : ${b.desc}`} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border)", borderRadius: 8, padding: "0.5rem 0.75rem", textAlign: "center", minWidth: 80, opacity: 0.4 }}>
+                            <div style={{ fontSize: "1.2rem", marginBottom: "0.2rem", filter: "grayscale(1)" }}>{b.emoji}</div>
+                            <div style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>{b.label}</div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ── Sélecteur d'avatar emoji ─────────────────────────────────────────────────
+const AVATARS = ["🎬","🎭","🎞️","🍿","🎥","🎦","⭐","🌟","🏆","🦁","🐉","🌙","🔥","💫","🎪","🧙","🦸","👽","🤖","🧛"];
+
+function AvatarPicker({ current, onSave }: { current: string; onSave: (a: string) => void }) {
+    const [open, setOpen] = useState(false);
+    return (
+        <div style={{ position: "relative" }}>
+            <button onClick={() => setOpen(o => !o)} style={{ background: "none", border: "1px solid var(--border)", borderRadius: 4, padding: "0.3rem 0.6rem", color: "var(--gold)", fontSize: "0.75rem", cursor: "pointer" }}>
+                ✏️ Changer l'avatar
+            </button>
+            {open && (
+                <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, background: "var(--bg-2)", border: "1px solid var(--border)", borderRadius: 8, padding: "0.75rem", zIndex: 50, display: "flex", flexWrap: "wrap", gap: "0.4rem", width: 240, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
+                    {AVATARS.map(a => (
+                        <button
+                            key={a}
+                            onClick={() => { onSave(a); setOpen(false); }}
+                            style={{ fontSize: "1.4rem", background: a === current ? "rgba(201,168,76,0.2)" : "none", border: a === current ? "1px solid var(--gold)" : "1px solid transparent", borderRadius: 4, padding: "0.2rem 0.3rem", cursor: "pointer" }}
+                        >
+                            {a}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
 import {
     PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
     RadarChart, Radar, PolarGrid, PolarAngleAxis,
@@ -169,14 +242,14 @@ function StatsTab({ ratings, history, watchlist, prefs }: { ratings: any[], hist
 // ── Page principale ──────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
-    const { user, logout, isLoading } = useAuth();
+    const { user, logout, isLoading, setUser } = useAuth();
     const navigate                    = useNavigate();
     const { toast }                   = useToast();
     const { isMobile, isTablet }      = useResponsive();
     const [watchlist, setWatchlist]   = useState<any[]>([]);
     const [ratings,   setRatings]     = useState<any[]>([]);
     const [history,   setHistory]     = useState<any[]>([]);
-    const [tab, setTab]               = useState<"watchlist" | "ratings" | "history" | "stats">("watchlist");
+    const [tab, setTab]               = useState<"watchlist" | "ratings" | "history" | "stats" | "badges">("watchlist");
 
     useEffect(() => {
         if (!isLoading && !user) { navigate("/login"); return; }
@@ -191,6 +264,15 @@ export default function ProfilePage() {
         await api.clearHistory();
         setHistory([]);
         toast("Historique effacé", "info");
+    };
+
+    // ── Sauvegarde de l'avatar ───────────────────────────────────────────────
+    const saveAvatar = async (avatar: string) => {
+        try {
+            const updated = await api.updateProfile({ username: user?.username, avatar }) as any;
+            setUser(updated);
+            toast("Avatar mis à jour !");
+        } catch (err: any) { toast(err.message, "error"); }
     };
 
     // ── Mode soirée : film aléatoire de la watchlist ─────────────────────────
@@ -210,7 +292,17 @@ export default function ProfilePage() {
 
                 {/* Header profil */}
                 <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", marginBottom: "2rem", flexDirection: isMobile ? "column" : "row", textAlign: isMobile ? "center" : "left", flexWrap: "wrap" }}>
-                    <div style={s.avatar}>{user?.username?.[0]?.toUpperCase()}</div>
+                    <div style={{ position: "relative" }}>
+                        <div style={s.avatar}>
+                            {(user as any)?.avatar
+                                ? <span style={{ fontSize: "1.8rem" }}>{(user as any).avatar}</span>
+                                : user?.username?.[0]?.toUpperCase()
+                            }
+                        </div>
+                        <div style={{ position: "absolute", bottom: -6, right: -6 }}>
+                            <AvatarPicker current={(user as any)?.avatar || ""} onSave={saveAvatar} />
+                        </div>
+                    </div>
                     <div style={{ flex: 1 }}>
                         <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: isMobile ? "2rem" : "2.5rem", fontWeight: 300, color: "var(--text)" }}>{user?.username}</h1>
                         <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", marginTop: "0.2rem" }}>{user?.email}</p>
@@ -232,11 +324,14 @@ export default function ProfilePage() {
                 {/* ADN Cinéma */}
                 <ADNCinema prefs={prefs} />
 
+                {/* Badges */}
+                <BadgesSection watchlist={watchlist} ratings={ratings} history={history} prefs={prefs} />
+
                 {/* Onglets */}
                 <div style={s.tabs}>
-                    {(["watchlist", "ratings", "history", "stats"] as const).map(t => (
+                    {(["watchlist", "ratings", "history", "stats", "badges"] as const).map(t => (
                         <button key={t} onClick={() => setTab(t)} style={{ ...s.tab, ...(tab === t ? s.tabActive : {}) }}>
-                            {t === "watchlist" ? "Ma Watchlist" : t === "ratings" ? "Mes Notes" : t === "history" ? "Historique" : "Statistiques"}
+                            {t === "watchlist" ? "Ma Watchlist" : t === "ratings" ? "Mes Notes" : t === "history" ? "Historique" : t === "stats" ? "Statistiques" : "Badges"}
                         </button>
                     ))}
                 </div>
@@ -281,6 +376,10 @@ export default function ProfilePage() {
 
                 {tab === "stats" && (
                     <StatsTab ratings={ratings} history={history} watchlist={watchlist} prefs={prefs} />
+                )}
+
+                {tab === "badges" && (
+                    <BadgesSection watchlist={watchlist} ratings={ratings} history={history} prefs={prefs} />
                 )}
             </div>
         </div>

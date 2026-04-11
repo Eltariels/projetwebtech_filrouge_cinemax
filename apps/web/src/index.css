@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
 
-:root {
+/* ── Thème sombre (défaut) ─────────────────────────────────────────────────── */
+:root, [data-theme="dark"] {
     --gold: #c9a84c;
     --gold-light: #e8c97e;
     --gold-dark: #8a6f2e;
@@ -13,6 +14,30 @@
     --border: #2a2a2a;
     --red: #c0392b;
     --radius: 4px;
+    --skeleton-bg: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+    --nav-bg: linear-gradient(to bottom, rgba(10,10,10,0.98), transparent);
+    --nav-border: rgba(201,168,76,0.1);
+}
+
+/* ── Thème clair ────────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+    --bg: #f5f0e8;
+    --bg-2: #ede8dc;
+    --bg-3: #e2dcd0;
+    --bg-card: #ede8dc;
+    --text: #1a1510;
+    --text-muted: #6a6050;
+    --border: #c8c0b0;
+    --red: #c0392b;
+    --skeleton-bg: linear-gradient(90deg, #e2dcd0 25%, #d5cfc5 50%, #e2dcd0 75%);
+    --nav-bg: linear-gradient(to bottom, rgba(245,240,232,0.98), transparent);
+    --nav-border: rgba(138,111,46,0.2);
+}
+
+/* ── Animation shimmer (squelettes de chargement) ──────────────────────────── */
+@keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -23,12 +48,13 @@ body {
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 a { color: inherit; text-decoration: none; }
 img { display: block; max-width: 100%; }
 button { cursor: pointer; border: none; font-family: inherit; }
-input { font-family: inherit; }
+input, textarea, select { font-family: inherit; }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -37,17 +63,9 @@ input { font-family: inherit; }
 .font-display { font-family: 'Cormorant Garamond', serif; }
 
 /* ── Responsive utilities ───────────────────────────────────────────────────── */
-
-/* Carte film */
 .movie-card-w { width: 150px; flex-shrink: 0; }
-
-/* Padding contenu pages */
 .page-content { padding: 6rem 3rem 4rem; }
-
-/* Conteneur hero */
 .hero-content-pad { padding: 0 4rem; max-width: 620px; }
-
-/* Cartes auth */
 .auth-card { width: 100%; max-width: 420px; padding: 3rem; }
 
 /* ── Mobile < 768px ─────────────────────────────────────────────────────────── */

@@ -59,9 +59,11 @@ tmdbRouter.get("/search", async (req, res) => {
 tmdbRouter.get("/discover", async (req, res) => {
     try {
         const { genres = "", sort_by = "popularity.desc", min_rating = "", page = 1 } = req.query;
+        const { max_runtime = "" } = req.query;
         const params = { sort_by, page };
-        if (genres)    params.with_genres        = genres;
-        if (min_rating) params["vote_average.gte"] = min_rating;
+        if (genres)      params.with_genres             = genres;
+        if (min_rating)  params["vote_average.gte"]     = min_rating;
+        if (max_runtime) params["with_runtime.lte"]     = max_runtime;
         const data = await tmdbFetch("/discover/movie", params);
         res.json(data);
     } catch (err) {

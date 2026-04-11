@@ -95,6 +95,28 @@ authRouter.post("/forgot-password",
     }
 );
 
+// POST /api/auth/refresh
+// Renouvelle le JWT silencieusement (appelé au démarrage de l'app)
+// L'utilisateur reste connecté tant qu'il ouvre l'app au moins tous les 7 jours
+authRouter.post("/refresh", async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader?.startsWith("Bearer ")) return res.status(401).json({ error: "Token manquant" });
+
+        const token = authHeader.slice(7);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        const user = await User.findById(decoded.id).select("-password");
+        if (!user) return res.status(404).json({ error: "Utilisateur introuvable" });
+
+        const newToken = signToken(user);
+        res.json({ token: newToken, user: user.toSafeObject() });
+    } catch (err) {
+        // Token expiré ou invalide → le client doit se reconnecter
+        res.status(401).json({ error: "Session expirée, reconnecte-toi." });
+    }
+});
+
 // POST /api/auth/reset-password
 // Vérifie le token et change le mot de passe
 authRouter.post("/reset-password",

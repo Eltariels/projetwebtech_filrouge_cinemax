@@ -5,7 +5,9 @@ interface User {
     username: string;
     email: string;
     avatar: string;
+    role?: string;
     profiles: { name: string; avatar: string; isKid: boolean }[];
+    preferences?: any;
 }
 
 interface AuthContextType {
@@ -14,25 +16,40 @@ interface AuthContextType {
     login: (email: string, password: string) => Promise<void>;
     register: (username: string, email: string, password: string) => Promise<void>;
     logout: () => void;
+    setUser: (u: User) => void;
     isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
+    const [user,      setUser]      = useState<User | null>(null);
+    const [token,     setToken]     = useState<string | null>(localStorage.getItem("token"));
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const savedToken = localStorage.getItem("token");
         if (!savedToken) { setIsLoading(false); return; }
 
-        fetch("/api/users/me", { headers: { Authorization: `Bearer ${savedToken}` } })
-            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-            .then(data => setUser(data))
-            .catch(() => { localStorage.removeItem("token"); setToken(null); })
-            .finally(() => setIsLoading(false));
+        // Refresh silencieux : renouvelle le JWT à chaque ouverture de l'app
+        // Cela maintient la session active tant que l'utilisateur revient au moins tous les 7 jours
+        fetch("/api/auth/refresh", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${savedToken}` },
+        })
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(data => {
+            // Refresh OK → stocke le nouveau token + user
+            localStorage.setItem("token", data.token);
+            setToken(data.token);
+            setUser(data.user);
+        })
+        .catch(() => {
+            // Refresh échoué → nettoie la session
+            localStorage.removeItem("token");
+            setToken(null);
+        })
+        .finally(() => setIsLoading(false));
     }, []);
 
     const login = async (email: string, password: string) => {
@@ -69,11 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("token");
         setToken(null);
         setUser(null);
-        setIsLoading(false);
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, register, logout, isLoading }}>
+        <AuthContext.Provider value={{ user, token, login, register, logout, setUser, isLoading }}>
             {children}
         </AuthContext.Provider>
     );
