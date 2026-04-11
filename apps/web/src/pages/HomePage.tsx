@@ -160,7 +160,7 @@ export default function HomePage() {
                     <MovieRow title="▶ Continuer à regarder" movies={continueW} />
                 )}
                 {/* Sélection personnalisée */}
-                {forYou.length > 0 && (
+                {user && username && forYou.length > 0 && (
                     <MovieRow title={`✦ Sélection pour ${username}`} movies={forYou} />
                 )}
                 <MovieRow title="Tendances de la semaine" movies={trending} />
