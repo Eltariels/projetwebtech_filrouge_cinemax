@@ -44,6 +44,10 @@ export const api = {
     search: (query: string, page = "1") => apiFetch(`${API_BASE}/search`, { q: query, page }),
     getGenres: () => apiFetch(`${API_BASE}/genres`),
 
+    getNowPlaying: (page = "1") => apiFetch(`${API_BASE}/movies/now-playing`, { page }),
+    searchPerson: (query: string) => apiFetch(`${API_BASE}/person/search`, { q: query }),
+    getPersonMovies: (id: number | string) => apiFetch(`${API_BASE}/person/${id}/movies`),
+
     // Watchlist
     getWatchlist: () => authFetch("/api/watchlist"),
     addToWatchlist: (data: object) => authFetch("/api/watchlist", { method: "POST", body: JSON.stringify(data) }),
@@ -62,4 +66,11 @@ export const api = {
     getRating: (tmdbId: number) => authFetch(`/api/ratings/${tmdbId}`),
     saveRating: (data: object) => authFetch("/api/ratings", { method: "POST", body: JSON.stringify(data) }),
     deleteRating: (tmdbId: number) => authFetch(`/api/ratings/${tmdbId}`, { method: "DELETE" }),
+
+    // Auth avancée
+    forgotPassword: (email: string) => authFetch("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) }),
+    resetPassword: (token: string, password: string) => authFetch("/api/auth/reset-password", { method: "POST", body: JSON.stringify({ token, password }) }),
+
+    // Profil
+    updateProfile: (data: object) => authFetch("/api/users/me", { method: "PUT", body: JSON.stringify(data) }),
 };

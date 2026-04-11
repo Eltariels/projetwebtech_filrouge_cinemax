@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import MovieRow from "../components/MovieRow";
 import { api } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
@@ -15,15 +16,17 @@ export default function MoviePage() {
     const { isMobile, isTablet } = useResponsive();
     const mediaType = searchParams.get("type") === "tv" ? "tv" : "movie";
 
-    const [movie, setMovie] = useState<any>(null);
+    const [movie,       setMovie]       = useState<any>(null);
     const [inWatchlist, setInWatchlist] = useState(false);
-    const [userRating, setUserRating] = useState<number>(0);
-    const [review, setReview] = useState("");
-    const [ratingMsg, setRatingMsg] = useState("");
-    const [actionError, setActionError] = useState("");
+    const [userRating,  setUserRating]  = useState<number>(0);
+    const [review,      setReview]      = useState("");
+    const [ratingMsg,   setRatingMsg]   = useState("");
+    const [showTrailer, setShowTrailer] = useState(false);
 
     useEffect(() => {
         if (!id) return;
+        setMovie(null);
+        setShowTrailer(false);
         const fetchMedia = mediaType === "tv" ? api.getTv(id) : api.getMovie(id);
         (fetchMedia as Promise<any>).then(setMovie);
 
@@ -37,7 +40,7 @@ export default function MoviePage() {
         }
     }, [id, mediaType, user]);
 
-    // Enregistre dans l'historique quand le film est chargé
+    // Enregistre dans l'historique
     useEffect(() => {
         if (!movie || !user) return;
         api.addToHistory({
@@ -50,7 +53,6 @@ export default function MoviePage() {
     const toggleWatchlist = async () => {
         if (!user) { navigate("/login"); return; }
         if (!movie) return;
-        setActionError("");
         try {
             if (inWatchlist) {
                 await api.removeFromWatchlist(movie.id);
@@ -68,28 +70,28 @@ export default function MoviePage() {
                 setInWatchlist(true);
                 toast("Ajouté à la watchlist !");
             }
-        } catch (err: any) { setActionError(err.message); toast(err.message, "error"); }
+        } catch (err: any) { toast(err.message, "error"); }
     };
 
     const saveRating = async () => {
         if (!user) { navigate("/login"); return; }
         if (!movie || !userRating) return;
-        setActionError("");
         try {
             await api.saveRating({ tmdbId: movie.id, mediaType, score: userRating, review, title: movie.title || movie.name, posterPath: movie.poster_path });
             setRatingMsg("Note sauvegardée !");
             toast("Note sauvegardée !");
             setTimeout(() => setRatingMsg(""), 2000);
-        } catch (err: any) { setActionError(err.message); toast(err.message, "error"); }
+        } catch (err: any) { toast(err.message, "error"); }
     };
 
     if (!movie) return <div style={{ background: "var(--bg)", minHeight: "100vh" }}><Navbar /></div>;
 
-    const trailer = movie.videos?.results?.find((v: any) => v.type === "Trailer" && v.site === "YouTube");
-    const director = movie.credits?.crew?.find((c: any) => c.job === "Director");
-    const cast = movie.credits?.cast?.slice(0, isMobile ? 6 : 8) || [];
+    const trailer      = movie.videos?.results?.find((v: any) => v.type === "Trailer" && v.site === "YouTube");
+    const director     = movie.credits?.crew?.find((c: any) => c.job === "Director");
+    const cast         = movie.credits?.cast?.slice(0, isMobile ? 6 : 10) || [];
+    const similar      = (movie.similar?.results || []).filter((m: any) => m.poster_path).slice(0, 15);
     const displayTitle = movie.title || movie.name;
-    const displayYear = (movie.release_date || movie.first_air_date)?.split("-")[0];
+    const displayYear  = (movie.release_date || movie.first_air_date)?.split("-")[0];
 
     const contentPad = isMobile ? "5rem 1rem 3rem" : isTablet ? "6rem 2rem 3rem" : "7rem 3rem 4rem";
     const posterWidth = isMobile ? "100%" : isTablet ? 200 : 280;
@@ -103,7 +105,7 @@ export default function MoviePage() {
 
             <div style={{ position: "relative", zIndex: 1, padding: contentPad }}>
                 {/* Main : affiche + infos */}
-                <div style={{ display: "flex", gap: isMobile ? "1.5rem" : "3rem", marginBottom: "3rem", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "center" : "flex-start" }}>
+                <div style={{ display: "flex", gap: isMobile ? "1.5rem" : "3rem", marginBottom: "2.5rem", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "center" : "flex-start" }}>
                     <img
                         src={`https://image.tmdb.org/t/p/w400${movie.poster_path}`}
                         alt={displayTitle}
@@ -114,18 +116,16 @@ export default function MoviePage() {
                             {displayTitle}
                         </h1>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.65rem", alignItems: "center", marginBottom: "1rem", justifyContent: isMobile ? "center" : "flex-start" }}>
-                            <span style={{ color: "var(--gold)", fontWeight: 600, fontSize: "1rem" }}>★ {movie.vote_average?.toFixed(1)}/10</span>
-                            {displayYear && <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>{displayYear}</span>}
-                            {movie.runtime && <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>{movie.runtime} min</span>}
-                            {movie.number_of_seasons && <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>{movie.number_of_seasons} saison{movie.number_of_seasons > 1 ? "s" : ""}</span>}
+                            <span style={{ color: "var(--gold)", fontWeight: 600 }}>★ {movie.vote_average?.toFixed(1)}/10</span>
+                            {displayYear && <span style={s.meta}>{displayYear}</span>}
+                            {movie.runtime && <span style={s.meta}>{movie.runtime} min</span>}
+                            {movie.number_of_seasons && <span style={s.meta}>{movie.number_of_seasons} saison{movie.number_of_seasons > 1 ? "s" : ""}</span>}
                         </div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem", justifyContent: isMobile ? "center" : "flex-start" }}>
                             {movie.genres?.map((g: any) => <span key={g.id} style={s.genre}>{g.name}</span>)}
                         </div>
                         {director && <p style={{ ...s.director, textAlign: isMobile ? "center" : "left" }}>Réalisé par <strong style={{ color: "var(--gold)" }}>{director.name}</strong></p>}
                         {!isMobile && <p style={s.overview}>{movie.overview}</p>}
-
-                        {actionError && <p style={{ color: "#e74c3c", fontSize: "0.85rem", marginBottom: "0.75rem" }}>{actionError}</p>}
 
                         <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1.5rem", flexWrap: "wrap", justifyContent: isMobile ? "center" : "flex-start" }}>
                             <button
@@ -135,10 +135,12 @@ export default function MoviePage() {
                                 {inWatchlist ? "✓ Dans ma watchlist" : "+ Watchlist"}
                             </button>
                             {trailer && (
-                                <a href={`https://youtube.com/watch?v=${trailer.key}`} target="_blank" rel="noreferrer"
-                                    style={{ ...s.btnOutline, fontSize: isMobile ? "0.8rem" : "0.9rem", padding: isMobile ? "0.6rem 1.1rem" : "0.75rem 1.5rem" }}>
-                                    ▶ Trailer
-                                </a>
+                                <button
+                                    onClick={() => setShowTrailer(v => !v)}
+                                    style={{ ...s.btnOutline, fontSize: isMobile ? "0.8rem" : "0.9rem", padding: isMobile ? "0.6rem 1.1rem" : "0.75rem 1.5rem", cursor: "pointer" }}
+                                >
+                                    {showTrailer ? "✕ Fermer" : "▶ Bande-annonce"}
+                                </button>
                             )}
                         </div>
 
@@ -164,16 +166,32 @@ export default function MoviePage() {
                     </div>
                 </div>
 
-                {/* Casting */}
+                {/* ── Bande-annonce intégrée ──────────────────────────────── */}
+                {showTrailer && trailer && (
+                    <div style={{ marginBottom: "2.5rem" }}>
+                        <h2 style={s.sectionTitle}>Bande-annonce</h2>
+                        <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: 8, overflow: "hidden", background: "#000" }}>
+                            <iframe
+                                src={`https://www.youtube.com/embed/${trailer.key}?autoplay=1&rel=0`}
+                                title="Bande-annonce"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Casting ─────────────────────────────────────────────── */}
                 {cast.length > 0 && (
-                    <div>
+                    <div style={{ marginBottom: "2.5rem" }}>
                         <h2 style={s.sectionTitle}>Casting</h2>
                         <div style={{ display: "flex", gap: isMobile ? "0.5rem" : "1rem", flexWrap: "wrap" }}>
                             {cast.map((a: any) => (
-                                <div key={a.id} style={{ width: isMobile ? 85 : 100, textAlign: "center" }}>
+                                <div key={a.id} style={{ width: isMobile ? 80 : 100, textAlign: "center" }}>
                                     {a.profile_path
-                                        ? <img src={`https://image.tmdb.org/t/p/w185${a.profile_path}`} alt={a.name} style={{ width: isMobile ? 85 : 100, height: isMobile ? 110 : 130, objectFit: "cover", borderRadius: 4, marginBottom: "0.4rem" }} />
-                                        : <div style={{ width: isMobile ? 85 : 100, height: isMobile ? 110 : 130, background: "var(--bg-3)", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem", color: "var(--gold)", marginBottom: "0.4rem" }}>{a.name[0]}</div>
+                                        ? <img src={`https://image.tmdb.org/t/p/w185${a.profile_path}`} alt={a.name} style={{ width: isMobile ? 80 : 100, height: isMobile ? 105 : 130, objectFit: "cover", borderRadius: 4, marginBottom: "0.4rem" }} />
+                                        : <div style={{ width: isMobile ? 80 : 100, height: isMobile ? 105 : 130, background: "var(--bg-3)", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem", color: "var(--gold)", marginBottom: "0.4rem" }}>{a.name[0]}</div>
                                     }
                                     <p style={{ fontSize: "0.7rem", color: "var(--text)", lineHeight: 1.3 }}>{a.name}</p>
                                     <p style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginTop: "0.15rem" }}>{a.character}</p>
@@ -182,20 +200,29 @@ export default function MoviePage() {
                         </div>
                     </div>
                 )}
+
+                {/* ── Films similaires ────────────────────────────────────── */}
+                {similar.length > 0 && (
+                    <MovieRow
+                        title={`Films similaires à ${displayTitle}`}
+                        movies={similar.map((m: any) => ({ ...m, media_type: mediaType }))}
+                    />
+                )}
             </div>
         </div>
     );
 }
 
 const s: Record<string, React.CSSProperties> = {
-    genre: { background: "rgba(201,168,76,0.1)", border: "1px solid var(--gold-dark)", color: "var(--gold)", borderRadius: 20, padding: "0.2rem 0.65rem", fontSize: "0.72rem" },
-    director: { color: "var(--text-muted)", fontSize: "0.875rem", marginBottom: "0.75rem" },
-    overview: { color: "var(--text-muted)", lineHeight: 1.8, marginBottom: "1.5rem", fontSize: "0.92rem" },
-    btn: { fontWeight: 600, borderRadius: 4, cursor: "pointer" },
-    btnOutline: { background: "transparent", border: "1px solid var(--gold-dark)", color: "var(--gold)", fontWeight: 600, borderRadius: 4, display: "inline-block" },
-    ratingBox: { background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 8, padding: "1.25rem" },
+    meta:        { color: "var(--text-muted)", fontSize: "0.85rem" },
+    genre:       { background: "rgba(201,168,76,0.1)", border: "1px solid var(--gold-dark)", color: "var(--gold)", borderRadius: 20, padding: "0.2rem 0.65rem", fontSize: "0.72rem" },
+    director:    { color: "var(--text-muted)", fontSize: "0.875rem", marginBottom: "0.75rem" },
+    overview:    { color: "var(--text-muted)", lineHeight: 1.8, marginBottom: "1.5rem", fontSize: "0.92rem" },
+    btn:         { fontWeight: 600, borderRadius: 4, cursor: "pointer" },
+    btnOutline:  { background: "transparent", border: "1px solid var(--gold-dark)", color: "var(--gold)", fontWeight: 600, borderRadius: 4, display: "inline-block" },
+    ratingBox:   { background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 8, padding: "1.25rem" },
     ratingLabel: { fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "0.6rem", letterSpacing: "0.05em", textTransform: "uppercase" },
-    textarea: { width: "100%", background: "var(--bg-3)", border: "1px solid var(--border)", borderRadius: 4, padding: "0.65rem", color: "var(--text)", fontSize: "0.85rem", outline: "none", resize: "vertical", marginBottom: "0.65rem", boxSizing: "border-box" },
-    saveBtn: { background: "linear-gradient(135deg, var(--gold-dark), var(--gold))", color: "#0a0a0a", fontWeight: 600, padding: "0.55rem 1.25rem", borderRadius: 4, fontSize: "0.85rem", cursor: "pointer", border: "none" },
-    sectionTitle: { fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(1.2rem, 3vw, 1.75rem)", fontWeight: 300, color: "var(--gold)", marginBottom: "1.25rem" },
+    textarea:    { width: "100%", background: "var(--bg-3)", border: "1px solid var(--border)", borderRadius: 4, padding: "0.65rem", color: "var(--text)", fontSize: "0.85rem", outline: "none", resize: "vertical", marginBottom: "0.65rem", boxSizing: "border-box" },
+    saveBtn:     { background: "linear-gradient(135deg, var(--gold-dark), var(--gold))", color: "#0a0a0a", fontWeight: 600, padding: "0.55rem 1.25rem", borderRadius: 4, fontSize: "0.85rem", cursor: "pointer", border: "none" },
+    sectionTitle:{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(1.2rem, 3vw, 1.75rem)", fontWeight: 300, color: "var(--gold)", marginBottom: "1.25rem" },
 };

@@ -80,6 +80,39 @@ tmdbRouter.get("/tv/:id", async (req, res) => {
     }
 });
 
+// GET /api/tmdb/movies/now-playing — films actuellement en salle
+tmdbRouter.get("/movies/now-playing", async (req, res) => {
+    try {
+        const { page = 1, region = "FR" } = req.query;
+        const data = await tmdbFetch("/movie/now_playing", { page, region });
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/tmdb/person/search?q=... — recherche par acteur/réalisateur
+tmdbRouter.get("/person/search", async (req, res) => {
+    try {
+        const { q, page = 1 } = req.query;
+        if (!q) return res.status(400).json({ error: "Paramètre 'q' manquant" });
+        const data = await tmdbFetch("/search/person", { query: q, page });
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/tmdb/person/:id/movies — films d'un acteur/réalisateur
+tmdbRouter.get("/person/:id/movies", async (req, res) => {
+    try {
+        const data = await tmdbFetch(`/person/${req.params.id}/combined_credits`);
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 tmdbRouter.get("/genres", async (req, res) => {
     try {
         const data = await tmdbFetch("/genre/movie/list");

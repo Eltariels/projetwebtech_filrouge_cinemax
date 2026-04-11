@@ -42,6 +42,9 @@ export default function LoginPage() {
                     </button>
                 </form>
                 <p style={s.link}>
+                    <Link to="/forgot-password" style={{ color: "var(--text-muted)", fontSize: "0.82rem" }}>Mot de passe oublié ?</Link>
+                </p>
+                <p style={s.link}>
                     Pas encore de compte ? <Link to="/register" style={{ color: "var(--gold)" }}>Créer un compte</Link>
                 </p>
             </div>

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useState } from "react";
 import MovieCard from "./MovieCard";
 import { useResponsive } from "../hooks/useResponsive";
 
@@ -8,39 +8,91 @@ interface Props {
 }
 
 export default function MovieRow({ title, movies }: Props) {
-    const rowRef = useRef<HTMLDivElement>(null);
-    const { isMobile } = useResponsive();
-
-    const scroll = (dir: "left" | "right") => {
-        if (rowRef.current) {
-            rowRef.current.scrollBy({ left: dir === "right" ? 500 : -500, behavior: "smooth" });
-        }
-    };
+    const [startIdx, setStartIdx] = useState(0);
+    const [anim, setAnim]         = useState<"left" | "right" | null>(null);
+    const { isMobile, isTablet, isLarge } = useResponsive();
 
     if (!movies?.length) return null;
 
+    // Nombre de cartes visibles selon la taille d'écran
+    const visible = isMobile ? 2 : isTablet ? 3 : isLarge ? 7 : 5;
+    const n       = movies.length;
+
+    // Navigue dans une direction — animation 220ms puis update de l'index
+    const go = (dir: "left" | "right") => {
+        if (anim) return; // empêche les clics rapides pendant l'animation
+        setAnim(dir);
+        setTimeout(() => {
+            setStartIdx(i => dir === "right" ? (i + 1) % n : (i - 1 + n) % n);
+            setAnim(null);
+        }, 220);
+    };
+
+    // Construit le tableau des films à afficher (boucle avec modulo)
+    const displayed = Array.from(
+        { length: Math.min(visible, n) },
+        (_, i) => movies[(startIdx + i) % n]
+    );
+
     return (
-        <div style={s.section}>
+        <div style={{ marginBottom: "2rem" }}>
             <h2 style={s.title}>{title}</h2>
-            <div style={s.wrapper}>
-                {!isMobile && (
-                    <button style={{ ...s.arrow, left: 0 }} onClick={() => scroll("left")}>‹</button>
-                )}
-                <div ref={rowRef} style={s.row}>
-                    {movies.map(m => <MovieCard key={m.id} movie={m} />)}
+            <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+
+                {/* Flèche gauche */}
+                <button onClick={() => go("left")} style={s.arrow} aria-label="Précédent">‹</button>
+
+                {/* Rangée de cartes avec animation slide + fade */}
+                <div style={{
+                    flex: 1,
+                    display: "flex",
+                    gap: "0.5rem",
+                    overflow: "hidden",
+                    transform: anim === "right" ? "translateX(-24px)" : anim === "left" ? "translateX(24px)" : "translateX(0)",
+                    opacity: anim ? 0.55 : 1,
+                    transition: "transform 0.22s ease, opacity 0.22s ease",
+                }}>
+                    {displayed.map((m, i) => (
+                        <div
+                            key={`${m.id}-${startIdx}-${i}`}
+                            style={{ flex: `0 0 calc(${100 / displayed.length}% - 0.5rem)` }}
+                        >
+                            <MovieCard movie={m} />
+                        </div>
+                    ))}
                 </div>
-                {!isMobile && (
-                    <button style={{ ...s.arrow, right: 0 }} onClick={() => scroll("right")}>›</button>
-                )}
+
+                {/* Flèche droite */}
+                <button onClick={() => go("right")} style={s.arrow} aria-label="Suivant">›</button>
             </div>
         </div>
     );
 }
 
 const s: Record<string, React.CSSProperties> = {
-    section: { marginBottom: "2.5rem" },
-    title: { fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(1.1rem, 2.5vw, 1.5rem)", fontWeight: 400, color: "var(--gold)", marginBottom: "0.85rem", letterSpacing: "0.05em" },
-    wrapper: { position: "relative" },
-    row: { display: "flex", gap: "0.65rem", overflowX: "auto", scrollbarWidth: "none", paddingBottom: "0.5rem", paddingLeft: "0.1rem", paddingRight: "0.1rem" },
-    arrow: { position: "absolute", top: "40%", transform: "translateY(-50%)", zIndex: 10, background: "rgba(10,10,10,0.92)", border: "1px solid var(--gold-dark)", color: "var(--gold)", width: 34, height: 56, fontSize: "1.4rem", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" },
+    title: {
+        color: "var(--gold)",
+        marginBottom: "0.75rem",
+        fontSize: "1.1rem",
+        fontWeight: 400,
+        letterSpacing: "0.04em",
+        fontFamily: "'Cormorant Garamond', serif",
+    },
+    arrow: {
+        background: "rgba(201,168,76,0.08)",
+        border: "1px solid rgba(201,168,76,0.25)",
+        color: "var(--gold)",
+        fontSize: "1.8rem",
+        width: "2.25rem",
+        height: "2.25rem",
+        borderRadius: "50%",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+        transition: "background 0.2s, border-color 0.2s",
+        lineHeight: 1,
+        paddingBottom: "2px",
+    },
 };
