@@ -7,6 +7,8 @@ import { authRouter } from "./routes/auth.js";
 import { usersRouter } from "./routes/users.js";
 import { watchlistRouter } from "./routes/watchlist.js";
 import { ratingsRouter } from "./routes/ratings.js";
+import { historyRouter } from "./routes/history.js";
+import { adminRouter } from "./routes/admin.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,6 +23,8 @@ app.use("/api/auth", authRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/watchlist", watchlistRouter);
 app.use("/api/ratings", ratingsRouter);
+app.use("/api/history", historyRouter);
+app.use("/api/admin", adminRouter);
 
 app.use((req, res) => res.status(404).json({ error: "Route not found" }));
 

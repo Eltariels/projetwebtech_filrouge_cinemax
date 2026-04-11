@@ -61,6 +61,9 @@ export default function Navbar() {
 
                 {user ? (
                     <>
+                        {!compact && (user as any).role === "admin" && (
+                            <Link to="/admin" style={{ ...s.link, color: "var(--gold)" }}>⚙ Admin</Link>
+                        )}
                         {!compact && <Link to="/profile" style={s.link}>Ma liste</Link>}
                         <Link to="/profile" style={s.avatar} title={user.username}>
                             {user.username[0].toUpperCase()}

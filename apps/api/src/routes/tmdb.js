@@ -55,15 +55,14 @@ tmdbRouter.get("/search", async (req, res) => {
     }
 });
 
-// GET /api/tmdb/discover?genres=28,878&page=1
+// GET /api/tmdb/discover?genres=28,878&sort_by=popularity.desc&min_rating=6&page=1
 tmdbRouter.get("/discover", async (req, res) => {
     try {
-        const { genres = "", page = 1 } = req.query;
-        const data = await tmdbFetch("/discover/movie", {
-            with_genres: genres,
-            sort_by: "popularity.desc",
-            page,
-        });
+        const { genres = "", sort_by = "popularity.desc", min_rating = "", page = 1 } = req.query;
+        const params = { sort_by, page };
+        if (genres)    params.with_genres        = genres;
+        if (min_rating) params["vote_average.gte"] = min_rating;
+        const data = await tmdbFetch("/discover/movie", params);
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });

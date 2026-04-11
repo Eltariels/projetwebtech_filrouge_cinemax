@@ -3,6 +3,7 @@ import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { api } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 import { useResponsive } from "../hooks/useResponsive";
 
 export default function MoviePage() {
@@ -10,6 +11,7 @@ export default function MoviePage() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { toast } = useToast();
     const { isMobile, isTablet } = useResponsive();
     const mediaType = searchParams.get("type") === "tv" ? "tv" : "movie";
 
@@ -35,6 +37,16 @@ export default function MoviePage() {
         }
     }, [id, mediaType, user]);
 
+    // Enregistre dans l'historique quand le film est chargé
+    useEffect(() => {
+        if (!movie || !user) return;
+        api.addToHistory({
+            tmdbId: movie.id, mediaType,
+            title: movie.title || movie.name,
+            posterPath: movie.poster_path,
+        }).catch(() => {});
+    }, [movie?.id, user]);
+
     const toggleWatchlist = async () => {
         if (!user) { navigate("/login"); return; }
         if (!movie) return;
@@ -43,6 +55,7 @@ export default function MoviePage() {
             if (inWatchlist) {
                 await api.removeFromWatchlist(movie.id);
                 setInWatchlist(false);
+                toast("Retiré de la watchlist", "info");
             } else {
                 await api.addToWatchlist({
                     tmdbId: movie.id, mediaType,
@@ -53,8 +66,9 @@ export default function MoviePage() {
                     voteAverage: movie.vote_average,
                 });
                 setInWatchlist(true);
+                toast("Ajouté à la watchlist !");
             }
-        } catch (err: any) { setActionError(err.message); }
+        } catch (err: any) { setActionError(err.message); toast(err.message, "error"); }
     };
 
     const saveRating = async () => {
@@ -64,8 +78,9 @@ export default function MoviePage() {
         try {
             await api.saveRating({ tmdbId: movie.id, mediaType, score: userRating, review, title: movie.title || movie.name, posterPath: movie.poster_path });
             setRatingMsg("Note sauvegardée !");
+            toast("Note sauvegardée !");
             setTimeout(() => setRatingMsg(""), 2000);
-        } catch (err: any) { setActionError(err.message); }
+        } catch (err: any) { setActionError(err.message); toast(err.message, "error"); }
     };
 
     if (!movie) return <div style={{ background: "var(--bg)", minHeight: "100vh" }}><Navbar /></div>;

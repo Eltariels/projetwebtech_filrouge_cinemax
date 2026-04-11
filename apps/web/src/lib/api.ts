@@ -37,6 +37,8 @@ export const api = {
     getTopRated: (page = "1") => apiFetch(`${API_BASE}/movies/top-rated`, { page }),
     discover: (genres: number[], page = "1") =>
         apiFetch(`${API_BASE}/discover`, { genres: genres.join(","), page }),
+    discoverFiltered: (params: Record<string, string>) =>
+        apiFetch(`${API_BASE}/discover`, params),
     getMovie: (id: number | string) => apiFetch(`${API_BASE}/movies/${id}`),
     getTv: (id: number | string) => apiFetch(`${API_BASE}/tv/${id}`),
     search: (query: string, page = "1") => apiFetch(`${API_BASE}/search`, { q: query, page }),
@@ -49,6 +51,11 @@ export const api = {
 
     // Préférences
     savePreferences: (data: object) => authFetch("/api/users/preferences", { method: "PUT", body: JSON.stringify(data) }),
+
+    // Historique
+    getHistory: () => authFetch("/api/history"),
+    addToHistory: (data: object) => authFetch("/api/history", { method: "POST", body: JSON.stringify(data) }),
+    clearHistory: () => authFetch("/api/history", { method: "DELETE" }),
 
     // Ratings
     getRatings: () => authFetch("/api/ratings"),

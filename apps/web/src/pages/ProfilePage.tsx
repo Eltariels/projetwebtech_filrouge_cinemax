@@ -47,15 +47,21 @@ export default function ProfilePage() {
     const { isMobile, isTablet } = useResponsive();
     const [watchlist, setWatchlist] = useState<any[]>([]);
     const [ratings, setRatings]     = useState<any[]>([]);
-    const [tab, setTab]             = useState<"watchlist" | "ratings">("watchlist");
+    const [history, setHistory]     = useState<any[]>([]);
+    const [tab, setTab]             = useState<"watchlist" | "ratings" | "history">("watchlist");
 
     useEffect(() => {
         if (!isLoading && !user) { navigate("/login"); return; }
         (api.getWatchlist() as Promise<any[]>).then(setWatchlist).catch(() => {});
         (api.getRatings()   as Promise<any[]>).then(setRatings).catch(() => {});
+        (api.getHistory()   as Promise<any[]>).then(setHistory).catch(() => {});
     }, [user, isLoading]);
 
     const handleLogout = () => { logout(); navigate("/login"); };
+    const clearHistory = async () => {
+        await api.clearHistory();
+        setHistory([]);
+    };
     const prefs = (user as any)?.preferences;
     const contentPad = isMobile ? "5rem 1rem 3rem" : isTablet ? "6rem 2rem 3rem" : "6rem 3rem 4rem";
 
@@ -83,9 +89,9 @@ export default function ProfilePage() {
 
                 {/* Onglets */}
                 <div style={s.tabs}>
-                    {(["watchlist", "ratings"] as const).map(t => (
+                    {(["watchlist", "ratings", "history"] as const).map(t => (
                         <button key={t} onClick={() => setTab(t)} style={{ ...s.tab, ...(tab === t ? s.tabActive : {}) }}>
-                            {t === "watchlist" ? "Ma Watchlist" : "Mes Notes"}
+                            {t === "watchlist" ? "Ma Watchlist" : t === "ratings" ? "Mes Notes" : "Historique"}
                         </button>
                     ))}
                 </div>
@@ -107,6 +113,22 @@ export default function ProfilePage() {
                                 </div>
                             ))
                             : <p style={s.empty}>Vous n'avez encore noté aucun film.</p>}
+                    </div>
+                )}
+                {tab === "history" && (
+                    <div>
+                        {history.length > 0 && (
+                            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "1rem" }}>
+                                <button onClick={clearHistory} style={{ background: "none", border: "1px solid var(--border)", color: "var(--text-muted)", padding: "0.4rem 0.9rem", borderRadius: 4, cursor: "pointer", fontSize: "0.8rem" }}>
+                                    ✕ Effacer l'historique
+                                </button>
+                            </div>
+                        )}
+                        <div style={s.grid}>
+                            {history.length
+                                ? history.map(h => <MovieCard key={`${h.tmdbId}-${h.visitedAt}`} movie={{ id: h.tmdbId, title: h.title, poster_path: h.posterPath, vote_average: 0, media_type: h.mediaType }} />)
+                                : <p style={s.empty}>Aucun film consulté récemment.</p>}
+                        </div>
                     </div>
                 )}
             </div>

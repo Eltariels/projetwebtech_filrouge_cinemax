@@ -6,6 +6,7 @@ import MoviePage from "./pages/MoviePage";
 import SearchPage from "./pages/SearchPage";
 import ProfilePage from "./pages/ProfilePage";
 import PreferencesPage from "./pages/PreferencesPage";
+import AdminPage from "./pages/AdminPage";
 
 export default function App() {
     return (
@@ -17,6 +18,7 @@ export default function App() {
             <Route path="/search" element={<SearchPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/preferences" element={<PreferencesPage />} />
+            <Route path="/admin" element={<AdminPage />} />
         </Routes>
     );
 }
