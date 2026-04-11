@@ -56,25 +56,89 @@ function BadgesSection({ watchlist, ratings, history, prefs }: { watchlist: any[
 // ── Sélecteur d'avatar emoji ─────────────────────────────────────────────────
 const AVATARS = ["🎬","🎭","🎞️","🍿","🎥","🎦","⭐","🌟","🏆","🦁","🐉","🌙","🔥","💫","🎪","🧙","🦸","👽","🤖","🧛"];
 
-function AvatarPicker({ current, onSave }: { current: string; onSave: (a: string) => void }) {
-    const [open, setOpen] = useState(false);
+function AvatarPicker({ current, initial, onSave }: { current: string; initial: string; onSave: (a: string) => void }) {
+    const [open,   setOpen]   = useState(false);
+    const [hovered, setHover] = useState(false);
+
     return (
-        <div style={{ position: "relative" }}>
-            <button onClick={() => setOpen(o => !o)} style={{ background: "none", border: "1px solid var(--border)", borderRadius: 4, padding: "0.3rem 0.6rem", color: "var(--gold)", fontSize: "0.75rem", cursor: "pointer" }}>
-                ✏️ Changer l'avatar
-            </button>
-            {open && (
-                <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, background: "var(--bg-2)", border: "1px solid var(--border)", borderRadius: 8, padding: "0.75rem", zIndex: 50, display: "flex", flexWrap: "wrap", gap: "0.4rem", width: 240, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
-                    {AVATARS.map(a => (
-                        <button
-                            key={a}
-                            onClick={() => { onSave(a); setOpen(false); }}
-                            style={{ fontSize: "1.4rem", background: a === current ? "rgba(201,168,76,0.2)" : "none", border: a === current ? "1px solid var(--gold)" : "1px solid transparent", borderRadius: 4, padding: "0.2rem 0.3rem", cursor: "pointer" }}
-                        >
-                            {a}
-                        </button>
-                    ))}
+        <div style={{ position: "relative", display: "inline-block" }}>
+            {/* Avatar cliquable */}
+            <div
+                onClick={() => setOpen(o => !o)}
+                onMouseEnter={() => setHover(true)}
+                onMouseLeave={() => setHover(false)}
+                style={{
+                    width: 80, height: 80, borderRadius: "50%",
+                    background: "linear-gradient(135deg, var(--gold-dark), var(--gold))",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: current ? "2.2rem" : "1.75rem",
+                    color: "#0a0a0a", fontWeight: 700,
+                    cursor: "pointer",
+                    position: "relative",
+                    transition: "transform 0.15s",
+                    transform: hovered ? "scale(1.06)" : "scale(1)",
+                    boxShadow: hovered ? "0 0 0 3px rgba(201,168,76,0.4)" : "none",
+                    userSelect: "none",
+                }}
+            >
+                {current ? current : initial}
+
+                {/* Overlay crayon au hover */}
+                <div style={{
+                    position: "absolute", inset: 0, borderRadius: "50%",
+                    background: "rgba(0,0,0,0.45)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "1.3rem",
+                    opacity: hovered ? 1 : 0,
+                    transition: "opacity 0.15s",
+                    pointerEvents: "none",
+                }}>
+                    ✏️
                 </div>
+            </div>
+
+            {/* Picker grid */}
+            {open && (
+                <>
+                    {/* Backdrop invisible pour fermer en cliquant dehors */}
+                    <div style={{ position: "fixed", inset: 0, zIndex: 49 }} onClick={() => setOpen(false)} />
+                    <div style={{
+                        position: "absolute", top: "calc(100% + 10px)", left: "50%",
+                        transform: "translateX(-50%)",
+                        background: "var(--bg-2)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 10,
+                        padding: "0.75rem",
+                        zIndex: 50,
+                        display: "grid",
+                        gridTemplateColumns: "repeat(5, 1fr)",
+                        gap: "0.35rem",
+                        width: 210,
+                        boxShadow: "0 12px 40px rgba(0,0,0,0.5)",
+                    }}>
+                        <p style={{ gridColumn: "1/-1", fontSize: "0.68rem", color: "var(--text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.25rem" }}>
+                            Choisir un avatar
+                        </p>
+                        {AVATARS.map(a => (
+                            <button
+                                key={a}
+                                onClick={() => { onSave(a); setOpen(false); }}
+                                style={{
+                                    fontSize: "1.5rem",
+                                    background: a === current ? "rgba(201,168,76,0.2)" : "transparent",
+                                    border: a === current ? "2px solid var(--gold)" : "2px solid transparent",
+                                    borderRadius: 6,
+                                    padding: "0.3rem",
+                                    cursor: "pointer",
+                                    transition: "background 0.1s",
+                                    lineHeight: 1,
+                                }}
+                            >
+                                {a}
+                            </button>
+                        ))}
+                    </div>
+                </>
             )}
         </div>
     );
@@ -292,17 +356,11 @@ export default function ProfilePage() {
 
                 {/* Header profil */}
                 <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", marginBottom: "2rem", flexDirection: isMobile ? "column" : "row", textAlign: isMobile ? "center" : "left", flexWrap: "wrap" }}>
-                    <div style={{ position: "relative" }}>
-                        <div style={s.avatar}>
-                            {(user as any)?.avatar
-                                ? <span style={{ fontSize: "1.8rem" }}>{(user as any).avatar}</span>
-                                : user?.username?.[0]?.toUpperCase()
-                            }
-                        </div>
-                        <div style={{ position: "absolute", bottom: -6, right: -6 }}>
-                            <AvatarPicker current={(user as any)?.avatar || ""} onSave={saveAvatar} />
-                        </div>
-                    </div>
+                    <AvatarPicker
+                        current={(user as any)?.avatar || ""}
+                        initial={user?.username?.[0]?.toUpperCase() || "?"}
+                        onSave={saveAvatar}
+                    />
                     <div style={{ flex: 1 }}>
                         <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: isMobile ? "2rem" : "2.5rem", fontWeight: 300, color: "var(--text)" }}>{user?.username}</h1>
                         <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", marginTop: "0.2rem" }}>{user?.email}</p>
@@ -389,7 +447,7 @@ export default function ProfilePage() {
 const tagStyle: React.CSSProperties = { background: "rgba(201,168,76,0.1)", border: "1px solid var(--gold-dark)", color: "var(--gold)", borderRadius: 20, padding: "0.2rem 0.7rem", fontSize: "0.78rem", whiteSpace: "nowrap" };
 
 const s: Record<string, React.CSSProperties> = {
-    avatar:      { width: 72, height: 72, borderRadius: "50%", background: "linear-gradient(135deg, var(--gold-dark), var(--gold))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.75rem", color: "#0a0a0a", fontWeight: 700, flexShrink: 0 },
+    avatar:      { width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg, var(--gold-dark), var(--gold))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.75rem", color: "#0a0a0a", fontWeight: 700, flexShrink: 0 },
     logoutBtn:   { background: "transparent", border: "1px solid var(--border)", color: "var(--text-muted)", padding: "0.55rem 1.1rem", borderRadius: 4, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap" },
     soireeBtn:   { background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.3)", color: "var(--gold)", padding: "0.55rem 1.1rem", borderRadius: 4, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap", fontWeight: 500 },
     adnCard:     { background: "rgba(255,255,255,0.02)", border: "1px solid var(--border)", borderRadius: 8, padding: "1.25rem", marginBottom: "2rem" },
