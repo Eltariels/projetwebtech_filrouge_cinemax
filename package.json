@@ -5,15 +5,22 @@
   "scripts": {
     "dev": "concurrently \"node --watch apps/api/src/index.js\" \"vite apps/web --config apps/web/vite.config.ts\"",
     "dev:api": "node --watch apps/api/src/index.js",
-    "dev:web": "vite apps/web --config apps/web/vite.config.ts"
+    "dev:web": "vite apps/web --config apps/web/vite.config.ts",
+    "test": "vitest run --config apps/web/vite.config.ts",
+    "build": "vite build --config apps/web/vite.config.ts"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "concurrently": "^9.2.1",
+    "jsdom": "^29.0.2",
     "typescript": "^6.0.2",
-    "vite": "^8.0.3"
+    "vite": "^8.0.3",
+    "vitest": "^4.1.4"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
