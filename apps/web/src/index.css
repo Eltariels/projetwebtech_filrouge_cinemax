@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+    --gold: #c9a84c;
+    --gold-light: #e8c97e;
+    --gold-dark: #8a6f2e;
+    --bg: #0a0a0a;
+    --bg-2: #111111;
+    --bg-3: #1a1a1a;
+    --bg-card: #141414;
+    --text: #f0ede8;
+    --text-muted: #8a8580;
+    --border: #2a2a2a;
+    --red: #c0392b;
+    --radius: 4px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+button { cursor: pointer; border: none; font-family: inherit; }
+input { font-family: inherit; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 2px; }
+
+.font-display { font-family: 'Cormorant Garamond', serif; }
+
+/* ── Responsive utilities ───────────────────────────────────────────────────── */
+
+/* Carte film */
+.movie-card-w { width: 150px; flex-shrink: 0; }
+
+/* Padding contenu pages */
+.page-content { padding: 6rem 3rem 4rem; }
+
+/* Conteneur hero */
+.hero-content-pad { padding: 0 4rem; max-width: 620px; }
+
+/* Cartes auth */
+.auth-card { width: 100%; max-width: 420px; padding: 3rem; }
+
+/* ── Mobile < 768px ─────────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+    .movie-card-w         { width: 120px; }
+    .page-content         { padding: 5rem 1rem 3rem; }
+    .hero-content-pad     { padding: 0 1.25rem; max-width: 100%; }
+    .auth-card            { padding: 2rem 1.25rem; max-width: 100%; margin: 0 1rem; }
+    .hide-mobile          { display: none !important; }
+    .cast-grid-resp       { gap: 0.5rem; }
+    .cast-card-resp       { width: 85px; }
+    .cast-img-resp        { width: 85px; height: 110px; }
+}
+
+/* ── Tablette 768–1023px ────────────────────────────────────────────────────── */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .movie-card-w         { width: 135px; }
+    .page-content         { padding: 5.5rem 2rem 3.5rem; }
+    .hero-content-pad     { padding: 0 2.5rem; max-width: 500px; }
+    .auth-card            { padding: 2.5rem; }
+}
+
+/* ── Grand écran ≥ 1440px ───────────────────────────────────────────────────── */
+@media (min-width: 1440px) {
+    .movie-card-w         { width: 170px; }
+    .page-content         { padding: 7rem 5rem 5rem; }
+    .hero-content-pad     { padding: 0 6rem; max-width: 750px; }
+    .large-container      { max-width: 1700px; margin-left: auto; margin-right: auto; }
+}
