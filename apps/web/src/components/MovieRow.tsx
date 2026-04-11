@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import MovieCard from "./MovieCard";
 import { useResponsive } from "../hooks/useResponsive";
 
@@ -9,26 +9,32 @@ interface Props {
 
 export default function MovieRow({ title, movies }: Props) {
     const [startIdx, setStartIdx] = useState(0);
-    const [anim, setAnim]         = useState<"left" | "right" | null>(null);
+    const [fading,   setFading]   = useState(false);
+    const cooldown = useRef(false);
     const { isMobile, isTablet, isLarge } = useResponsive();
 
     if (!movies?.length) return null;
 
-    // Nombre de cartes visibles selon la taille d'écran
     const visible = isMobile ? 2 : isTablet ? 3 : isLarge ? 7 : 5;
     const n       = movies.length;
 
-    // Navigue dans une direction — animation 220ms puis update de l'index
     const go = (dir: "left" | "right") => {
-        if (anim) return; // empêche les clics rapides pendant l'animation
-        setAnim(dir);
+        if (cooldown.current) return;
+        cooldown.current = true;
+
+        // Phase 1 : fade out (150ms)
+        setFading(true);
+
         setTimeout(() => {
+            // Phase 2 : change les cartes pendant qu'elles sont invisibles
             setStartIdx(i => dir === "right" ? (i + 1) % n : (i - 1 + n) % n);
-            setAnim(null);
-        }, 220);
+            setFading(false);          // fade in
+
+            // Cooldown léger pour éviter les clics trop rapides
+            setTimeout(() => { cooldown.current = false; }, 100);
+        }, 150);
     };
 
-    // Construit le tableau des films à afficher (boucle avec modulo)
     const displayed = Array.from(
         { length: Math.min(visible, n) },
         (_, i) => movies[(startIdx + i) % n]
@@ -39,18 +45,15 @@ export default function MovieRow({ title, movies }: Props) {
             <h2 style={s.title}>{title}</h2>
             <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "0.5rem" }}>
 
-                {/* Flèche gauche */}
                 <button onClick={() => go("left")} style={s.arrow} aria-label="Précédent">‹</button>
 
-                {/* Rangée de cartes avec animation slide + fade */}
                 <div style={{
                     flex: 1,
                     display: "flex",
                     gap: "0.5rem",
                     overflow: "hidden",
-                    transform: anim === "right" ? "translateX(-24px)" : anim === "left" ? "translateX(24px)" : "translateX(0)",
-                    opacity: anim ? 0.55 : 1,
-                    transition: "transform 0.22s ease, opacity 0.22s ease",
+                    opacity: fading ? 0 : 1,
+                    transition: "opacity 0.15s ease",
                 }}>
                     {displayed.map((m, i) => (
                         <div
@@ -62,7 +65,6 @@ export default function MovieRow({ title, movies }: Props) {
                     ))}
                 </div>
 
-                {/* Flèche droite */}
                 <button onClick={() => go("right")} style={s.arrow} aria-label="Suivant">›</button>
             </div>
         </div>
