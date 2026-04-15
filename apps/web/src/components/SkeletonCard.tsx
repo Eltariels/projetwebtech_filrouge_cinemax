@@ -1,7 +1,3 @@
-/**
- * Carte squelette — affichée pendant le chargement à la place d'une MovieCard
- * L'animation shimmer donne l'effet de "chargement en cours"
- */
 export function SkeletonCard() {
     return (
         <div style={{
@@ -15,9 +11,6 @@ export function SkeletonCard() {
     );
 }
 
-/**
- * Ligne de squelettes — remplace un MovieRow pendant le chargement
- */
 export function SkeletonRow({ count = 5 }: { count?: number }) {
     return (
         <div style={{ marginBottom: "2rem" }}>

@@ -1,72 +1,35 @@
-# ─────────────────────────────────────────────────────────────────────────────
-# CI — Cinemax
-#
-# Ce workflow s'exécute automatiquement sur GitHub à chaque push.
-# Il vérifie que le code compile et que les tests passent.
-# ─────────────────────────────────────────────────────────────────────────────
-
 name: CI
 
-# ── Déclencheurs ──────────────────────────────────────────────────────────────
-# Le workflow se lance dans ces 3 cas :
-#   1. push sur la branche "dev"     → dès que tu travailles
-#   2. push sur la branche "main"    → avant un merge
-#   3. pull_request vers "main"      → quand tu demandes un merge
 on:
   push:
     branches: [dev, main]
   pull_request:
     branches: [main]
 
-# ── Jobs ──────────────────────────────────────────────────────────────────────
-# Un "job" = une série d'étapes qui tourne sur une machine virtuelle GitHub.
-# On a un seul job appelé "test-and-build".
 jobs:
   test-and-build:
-    # La VM utilisée : Ubuntu (Linux) — c'est le plus rapide et le plus courant
     runs-on: ubuntu-latest
 
     steps:
-      # ── 1. Récupérer le code ────────────────────────────────────────────────
-      # "actions/checkout" = git clone de ton repo sur la VM
-      - name: Checkout du code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # ── 2. Installer Node.js ────────────────────────────────────────────────
-      # "actions/setup-node" installe Node 20 sur la VM
-      # "cache: npm" met en cache node_modules entre les runs → plus rapide
-      - name: Installer Node.js 20
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
 
-      # ── 3. Installer les dépendances ────────────────────────────────────────
-      # "npm ci" = comme "npm install" mais plus strict :
-      #   - lit package-lock.json exactement (versions fixes)
-      #   - supprime node_modules avant → installation propre
-      #   - ne modifie jamais package.json
-      - name: Installer les dépendances (npm ci)
+      - name: Install dependencies
         run: npm ci
 
-      # ── 4. Lancer les tests ─────────────────────────────────────────────────
-      # Lance : vitest run --config apps/web/vite.config.ts
-      # Si un test échoue → le job s'arrête ici en rouge ❌
-      # Si tout passe → continue en vert ✅
-      - name: Lancer les tests (Vitest)
+      - name: Run tests
         run: npm test
 
-      # ── 5. Vérifier le TypeScript ───────────────────────────────────────────
-      # "tsc --noEmit" = vérifie les types sans générer de fichiers .js
-      # Détecte les erreurs de type que les tests n'attrapent pas
-      - name: Vérifier les types TypeScript
+      - name: TypeScript check
         run: npx tsc --noEmit --project apps/web/tsconfig.json
 
-      # ── 6. Builder le frontend ──────────────────────────────────────────────
-      # "vite build" = compile React → HTML/JS/CSS optimisé pour la prod
-      # Si le build casse → problème d'import, de config, etc.
-      - name: Builder le frontend (Vite)
+      - name: Build
         run: npm run build
         env:
-          # Vite a besoin de savoir que c'est un build CI (pas de .env local)
           CI: true

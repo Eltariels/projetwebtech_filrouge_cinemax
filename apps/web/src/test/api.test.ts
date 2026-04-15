@@ -1,7 +1,3 @@
-/**
- * Tests unitaires — module api.ts
- * Vérifie que toutes les fonctions API existent et ont la bonne signature
- */
 import { describe, it, expect } from "vitest";
 import { api } from "../lib/api";
 

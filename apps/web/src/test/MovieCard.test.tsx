@@ -1,7 +1,3 @@
-/**
- * Tests unitaires — composant MovieCard
- * Vérifie le rendu et les interactions de base
- */
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";

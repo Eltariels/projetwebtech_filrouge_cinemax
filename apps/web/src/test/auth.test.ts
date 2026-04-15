@@ -1,7 +1,3 @@
-/**
- * Tests unitaires — logique d'authentification
- * Vérifie la gestion du token JWT dans localStorage
- */
 import { describe, it, expect, beforeEach } from "vitest";
 
 // Simule localStorage
